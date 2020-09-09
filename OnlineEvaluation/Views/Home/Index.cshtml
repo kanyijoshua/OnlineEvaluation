@@ -1,0 +1,34 @@
+﻿@inject ApplicationDbContext _context
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome To onLine Evaluation System</h1>
+    <h3>Choose Evaluation type</h3>
+    <div class="row">
+        @foreach (var item in _context.EvaluationType.Where(x=>x.StatusOpen ==true))
+        {
+            string type ="";
+            if (item.Name.Contains("Self"))type = "Individual";
+            if (item.Name.Contains("Chair"))type = "Chairperson";
+            if (item.Name.Contains("C.E"))type = "Ceos";
+            if (item.Name.Contains("Direct"))type = "Director";
+            <div class="card" style="width: 18rem; margin: 3%;">
+                <i class="material-icons" style="zoom: 400%;">supervisor_account</i>
+                <div class="card-body">
+                    <h5 class="card-title">@item.Name</h5>
+                    @if (User.IsInRole("Chairperson") && type == "CEO")
+                    {
+                        <button disabled class="btn btn-sm btn-danger">Not Allowed</button>
+                    }
+                    else
+                    {
+                        <a asp-controller="Evaluation" asp-action="Index" asp-route-EvaluationTypeId="@item.Id" asp-route-type="@type" class="btn btn-primary">Start Evalation</a>
+                    }
+                </div>
+            </div>
+        }
+        </div>
+</div>

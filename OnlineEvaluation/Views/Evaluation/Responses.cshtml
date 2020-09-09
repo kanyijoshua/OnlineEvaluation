@@ -1,0 +1,64 @@
+@model IEnumerable<OnlineEvaluation.Models.Response>
+@inject ApplicationDbContext _context
+@using System.Linq;
+@using System.Text.RegularExpressions;
+@using Microsoft.EntityFrameworkCore;
+@{
+    ViewData["Title"] = "Results";
+}
+
+@{
+    var SubjecttotalQuizResponses = Model.Count();
+    var SubjectsumResponses = Model.Sum(x=>(long)x.Responses);
+    var SubjectavgScore = Math.Round((decimal)SubjectsumResponses / (decimal)SubjecttotalQuizResponses, 0);
+    var responseName = (Respond)SubjectavgScore;
+    <div class="flex-column">
+        <h3>@ViewBag.Subjectname Overrall Avarage Score :</h3>
+        <h4 title="rounded up from @SubjectsumResponses / @SubjecttotalQuizResponses =@Math.Round((decimal)SubjectsumResponses / (decimal)SubjecttotalQuizResponses, 1)">@SubjectavgScore (@responseName)</h4>(<small>total point/total Question</small>)
+    </div>
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.question.Question)
+            </th>
+            <th>
+                Total Question Response
+            </th>
+            <th>
+                Total Question Score
+            </th>
+            <th>
+                Avarage Question Score
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            var questions = _context.Questionnaire.Where(x=>x.EvaluationTypeId == Model.Take(1).SingleOrDefault().EvaluationSubject.EvaluationTypeId);
+            foreach (var item in questions)
+            {
+                var Responses =  Model.Where(x=>x.QuestionId == item.Id);
+                var totalQuizResponses = Responses.Count();
+                var sumResponses = Responses.Sum(x=>(long)x.Responses);
+                var avgScore = Math.Round((decimal)sumResponses / (decimal)totalQuizResponses, 0);
+                <tr>
+                    <td>
+                        @item.Question
+                    </td>
+                    <td>
+                        @totalQuizResponses
+                    </td>
+                    <td>
+                        @sumResponses
+                    </td>
+                    <th>
+                        @avgScore
+                    </th>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

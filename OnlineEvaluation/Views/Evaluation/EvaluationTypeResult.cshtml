@@ -1,0 +1,74 @@
+@model IEnumerable<OnlineEvaluation.Models.EvaluationType>
+@inject ApplicationDbContext _context
+@using System.Linq;
+@using System.Text.RegularExpressions;
+@using Microsoft.EntityFrameworkCore;
+@{
+    ViewData["Title"] = "Results";
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OpeningDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ClosingDate)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.OpeningDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClosingDate)
+            </td>
+            <td>
+                <button class="btn-block btn-sm btn btn-secondary" data-toggle="collapse" data-target='#@Regex.Replace($"{item.Name}-{item.OpeningDate}", @"[^0-9a-zA-Z]+", "")' aria-expanded="false" aria-controls="collapseExample">View candidates</button>
+                <div id='@Regex.Replace($"{item.Name}-{item.OpeningDate}", @"[^0-9a-zA-Z]+", "")' class="collapse" style="width:80%">
+                    @if (item.EvaluationSubject.Count > 0)
+                    {
+                        <p>Choose Evaluation Target</p>
+                        <ul style="width:inherit">
+                            @{
+                                var Categorysubs = _context.EvaluationSubject.Include(x=>x.CEO)
+                                                    .Include(x=>x.Chairperson).Include(x=>x.Director).Include(x=>x.personBeingEvaluated)
+                                                    .Where(x => x.EvaluationTypeId == item.Id).Where(x => x.Responses.Any());
+                                if (Categorysubs.ToList().Count>0)
+                                {
+                                   foreach (var categorysub in Categorysubs)
+                                    {
+                                        var subjectdesplayName = "";
+                                        if (categorysub.CEOId != null)subjectdesplayName= categorysub.CEO.UserName; 
+                                        if (categorysub.DirectorId != null)subjectdesplayName= categorysub.Director.UserName;
+                                        if (categorysub.ChairpersonId != null)subjectdesplayName= categorysub.Chairperson.UserName;
+                                        if (categorysub.personBeingEvaluatedId != null)subjectdesplayName= categorysub.personBeingEvaluated.UserName;
+                                        <li><a asp-controller="Evaluation" asp-action="Responses" asp-route-Subjectname=" @subjectdesplayName" asp-route-id="@categorysub.Id">@categorysub.StateCorporations - @subjectdesplayName</a></li>
+                                    } 
+                                }else
+                                {
+                                    <p>Subject Has no responses</p>
+                                }
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p>No candidate found </p>
+                    }
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
